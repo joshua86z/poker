@@ -1,7 +1,7 @@
 package poker
 
 import (
-	"ws/libs/array"
+	"github.com/fhbzyc/poker/libs/array"
 )
 
 //皇家同花顺
