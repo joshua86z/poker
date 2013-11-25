@@ -1,7 +1,7 @@
 package array
 
 import (
-	"fmt"
+	//	"fmt"
 	"math/rand"
 	"time"
 )
@@ -24,7 +24,7 @@ func StringShuffle(array *[]string) {
 		num := rand.Intn(length - 1)
 		for {
 			if lock[num] != "yes" {
-				fmt.Println(num)
+				//				fmt.Println(num)
 				res[num] = val
 				lock[num] = "yes"
 				break
@@ -38,8 +38,6 @@ func StringShuffle(array *[]string) {
 	}
 
 	*array = res
-
-	fmt.Println(array)
 }
 
 //打乱一维切片
@@ -58,7 +56,7 @@ func IntShuffle(array *[]int) {
 		num := rand.Intn(length - 1)
 		for {
 			if lock[num] != "yes" {
-				fmt.Println(num)
+				//				fmt.Println(num)
 				res[num] = val
 				lock[num] = "yes"
 				break
@@ -72,8 +70,6 @@ func IntShuffle(array *[]int) {
 	}
 
 	*array = res
-
-	fmt.Println(array)
 }
 
 //从小到大排序

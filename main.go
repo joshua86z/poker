@@ -4,7 +4,7 @@ import (
 	"code.google.com/p/go.net/websocket"
 	//	"fmt"
 	//	"io"
-	"github.com/fhbzyc/poker/models/routine"
+	"github.com/fhbzyc/poker/models"
 	"log"
 	"net/http"
 
@@ -15,8 +15,16 @@ import (
 
 func ChatWith(ws *websocket.Conn) {
 
-	routine.WsList[routine.WsListNum] = ws
-	routine.WsListNum++
+	if models.WsListNum >= 9 {
+		return
+	}
+
+	models.WsList = append(models.WsList, ws)
+	models.WsListNum++
+
+	if models.WsListNum == 2 {
+		go models.Play()
+	}
 
 	var err error
 
@@ -32,7 +40,7 @@ func ChatWith(ws *websocket.Conn) {
 			if reply == "" {
 				continue
 			}
-			go routine.Run(reply, ws)
+			go models.Run(reply, ws)
 
 			//				continue
 			//			}
@@ -44,8 +52,8 @@ func ChatWith(ws *websocket.Conn) {
 
 func main() {
 	//
-	go http.Handle("/", websocket.Handler(ChatWith))
-	http.HandleFunc("/chat", Client)
+	http.Handle("/", websocket.Handler(ChatWith))
+	//	http.HandleFunc("/chat", Client)
 
 	//	fmt.Println("listen on port 8001")
 	//	fmt.Println("visit http://127.0.0.1:8001/chat with web browser(recommend: chrome)")
@@ -53,8 +61,4 @@ func main() {
 	if err := http.ListenAndServe(":8001", nil); err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
-}
-
-func Client(w http.ResponseWriter, r *http.Request) {
-	index.Client(w, r)
 }

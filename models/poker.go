@@ -1,8 +1,17 @@
-package poker
+package models
 
 import (
 	"github.com/fhbzyc/poker/libs/array"
 )
+
+func GetPoker() []int {
+	return []int{
+		2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, //红桃
+		102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, //方快
+		1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014, //黑桃
+		10002, 10003, 10004, 10005, 10006, 10007, 10008, 10009, 10010, 10011, 10012, 10013, 10014, //梅花
+	}
+}
 
 //皇家同花顺
 func IsRoyalFlush(pokers []int) bool {
@@ -27,6 +36,12 @@ func IsRoyalFlush(pokers []int) bool {
 //同花顺
 func IsStraightFlush(pokers []int) (bool, []int) {
 
+	for i := range pokers {
+		if pokers[i]%100 == 14 {
+			pokers = append(pokers, pokers[i]-13)
+		}
+	}
+
 	array.RSort(&pokers)
 
 	for i := range pokers {
@@ -35,6 +50,10 @@ func IsStraightFlush(pokers []int) (bool, []int) {
 			pokers[i]-2 == pokers[i+2] &&
 			pokers[i]-3 == pokers[i+3] &&
 			pokers[i]-4 == pokers[i+4] {
+
+			if pokers[i+4]%100 == 1 {
+				pokers[i+4] += 13
+			}
 
 			return true, []int{pokers[i], pokers[i+1], pokers[i+2], pokers[i+3], pokers[i+4]}
 
@@ -115,6 +134,12 @@ func IsFlush(pokers []int) (bool, []int) {
 //顺子
 func IsStraight(pokers []int) (bool, []int) {
 
+	for i := range pokers {
+		if pokers[i]%100 == 14 {
+			pokers = append(pokers, pokers[i]-13)
+		}
+	}
+
 	putOffColor(&pokers)
 	array.RSort(&pokers)
 
@@ -130,6 +155,9 @@ func IsStraight(pokers []int) (bool, []int) {
 
 					find++
 					if find == 5 {
+						if val-4 == 1 {
+							return true, []int{val, val - 1, val - 2, val - 3, 14}
+						}
 						return true, []int{val, val - 1, val - 2, val - 3, val - 4}
 					}
 				}

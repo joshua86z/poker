@@ -1,15 +1,199 @@
-package routine
+package models
 
 import (
 	"code.google.com/p/go.net/websocket"
+
 	"encoding/json"
+
 	"fmt"
-	"github.com/fhbzyc/poker/libs/array"
-	"math/rand"
+
+	//	"github.com/fhbzyc/poker/libs/array"
+	//	"math/rand"
 	"strconv"
-	"time"
+
+//	"time"
 )
 
+var WsList []*websocket.Conn
+var chanList []chan string
+
+var WsListNum int = 0
+
+var table Table
+
+func Run(reply string, ws *websocket.Conn) {
+
+	var GetData GetData
+
+	err := json.Unmarshal([]byte(reply), &GetData)
+
+	if err == nil {
+		switch GetData.Action {
+		case "bet":
+			//这里还缺个类型验证
+			num, err := strconv.Atoi(GetData.Data.(string))
+			if err != nil {
+				return
+			}
+			Id := getId(ws)
+
+			for i := range table.Players {
+				if table.Players[i].Id == Id {
+					if !table.Players[i].Cool {
+						return
+					}
+					if table.Players[i].Chip < num {
+						return
+					}
+					table.Players[i].bet(num)
+					nextId := table.NextPlayer(i)
+					table.addMaxChip(table.Players[i].getBet())
+					table.addSumChip(num)
+
+					if table.Players[nextId].getBet() >= table.MaxChip {
+						table.Next()
+						Play()
+					}
+					//					fmt.Println(table)
+					//					table.Players[i].cool(false)
+					//					table.Players[table.NextPlayer(i)].cool(true)
+
+					fmt.Println("桌面上筹码是", table.MaxChip)
+					return
+				}
+			}
+
+		}
+		return
+	} else {
+
+	}
+}
+
+func getId(ws *websocket.Conn) int {
+	for i, val := range WsList {
+		if val == ws {
+			return i + 1
+		}
+	}
+	return 0
+}
+
+func Play() {
+	step := table.GetStep()
+	switch step {
+	case 0:
+		startingHand()
+	case 1:
+		flopCards()
+	case 2:
+		turnCards()
+	case 3:
+		riverCards()
+	}
+}
+
+type SendData struct {
+	Action string
+	Data   interface{}
+}
+
+type GetData struct {
+	Action string
+	Data   interface{}
+}
+
+func startingHand() {
+
+	table.Init()
+	table.shuffle()
+
+	for i, ws := range WsList {
+		var player Player
+		player.Id = i + 1
+		player.Chip = 10000
+		player.Cool = false
+		player.Poker = table.startingHand()
+
+		if i == 0 {
+			player.Cool = true
+		}
+
+		table.addPlayer(player)
+
+		msg, _ := json.Marshal(SendData{Action: "startingHand", Data: player.Poker})
+
+		if ws != nil {
+			err := websocket.Message.Send(ws, string(msg))
+			if err != nil {
+				WsList[i] = nil
+			}
+		} else {
+
+		}
+
+		//		return
+	}
+
+	//	table.Next()
+}
+
+func flopCards() {
+
+	//	table.Next()
+
+	table.flopCards()
+
+	communityCards := table.GetCommunityCards()
+
+	result, _ := json.Marshal(SendData{Action: "flopCards", Data: communityCards})
+
+	send(string(result))
+}
+
+func turnCards() {
+
+	//	table.Next()
+
+	table.turnCards()
+
+	communityCards := table.GetCommunityCards()
+
+	result, _ := json.Marshal(SendData{Action: "turnCards", Data: communityCards[3:len(communityCards)]})
+
+	send(string(result))
+}
+
+func riverCards() {
+
+	//	table.Next()
+
+	table.riverCards()
+
+	communityCards := table.GetCommunityCards()
+
+	result, _ := json.Marshal(SendData{Action: "riverCards", Data: communityCards[4:len(communityCards)]})
+
+	send(string(result))
+}
+
+//群发数据
+func send(msg string) {
+	var err error
+	for i := 0; i < len(WsList); i++ {
+		if WsList[i] == nil {
+			continue
+		}
+
+		if err = websocket.Message.Send(WsList[i], msg); err != nil {
+			WsList[i] = nil
+		} else {
+
+		}
+	}
+}
+
+/*
 //牌桌
 type Table struct {
 	Step           int       //步骤  0没开始 1最先三张牌 2第四张牌 3第五张牌
@@ -77,44 +261,7 @@ type data struct {
 	Data   string
 }
 
-func Run(reply string, ws *websocket.Conn) {
 
-	fmt.Println(reply)
-
-	var data data
-	err := json.Unmarshal([]byte(reply), &data)
-	if err != nil {
-		return
-	}
-	if data.Action == "msg" {
-		result, _ := json.Marshal(Message{Action: "msg", Data: data.Data})
-		send(string(result))
-	}
-	/*
-		var ID int
-		for i := 0; i < len(WsList); i++ {
-
-			if WsList[i] == ws {
-				ID = i
-			}
-		}
-
-			Ready(ID)
-
-			if reply == "shoot" {
-				shoot(Postion[ID])
-				return
-			}
-
-			json := move(ID, reply)
-
-			if json != "" {
-				send(json)
-				//		websocket.Message.Send(WsList[ID], str)
-
-			}
-	*/
-}
 
 func send(msg string) {
 	var err error
@@ -362,3 +509,4 @@ OVER:
 		time.Sleep(time.Millisecond * 2)
 	}
 }
+*/
