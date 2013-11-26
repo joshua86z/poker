@@ -27,20 +27,19 @@ func (this *Table) Init() {
 func (this *Table) Next() {
 	switch this.Step {
 	case 0:
-		//		this.shuffle()
-		//		this.flopCards()
+		//手牌
 		this.Step += 1
 	case 1:
-		//		this.turnCards()
+		//前三张公共牌
 		this.Step += 1
 	case 2:
-		//		this.riverCards()
+		//第四张公共牌
 		this.Step += 1
 	case 3:
-		//		亮牌
+		//第五张公共牌
 		this.Step += 1
 	case 4:
-		//		下一局
+		//	亮牌 下一局
 		this.Step = 0
 	}
 }

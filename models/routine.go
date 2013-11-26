@@ -20,6 +20,7 @@ var chanList []chan string
 var WsListNum int = 0
 
 var table Table
+var Tables []Table
 
 func Run(reply string, ws *websocket.Conn) {
 
@@ -58,7 +59,7 @@ func Run(reply string, ws *websocket.Conn) {
 
 					nextBetPlayer(i)
 
-					fmt.Println("桌面上筹码是", table.MaxChip)
+					send(`{"Action":"bet","Data":{"id":"` + strconv.Itoa(Id) + `","bet":` + strconv.Itoa(num) + `}}`)
 					return
 				}
 			}
@@ -74,7 +75,7 @@ func Run(reply string, ws *websocket.Conn) {
 
 					nextBetPlayer(i)
 
-					fmt.Println(Id, "放弃牌了")
+					send(`{"Action":"fold","Data":{"Id":"` + strconv.Itoa(Id) + `"}}`)
 
 					return
 				}
@@ -114,7 +115,7 @@ func nextBetPlayer(index int) {
 		Play()
 
 		step := table.GetStep()
-		if step == 5 {
+		if step == 4 {
 			break
 		}
 	}
