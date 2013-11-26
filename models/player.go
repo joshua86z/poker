@@ -1,36 +1,49 @@
 package models
 
 type Player struct {
-	Id    int
-	Poker []int //扑克
-	Chip  int   //筹码
-	Cool  bool  //冻结
-	Bet   int   //下注的数
+	id      int
+	poker   []int //扑克
+	chip    int   //筹码
+	cool    bool  //冻结
+	betChip int   //下注的数
+	fold    bool  //放弃
 }
 
 func (this *Player) init() {
-	this.Chip = 10000
+	this.chip = 10000
 }
 
 //起手牌
 func (this *Player) startingHand(poker []int) {
-	this.Poker = poker
+	this.poker = poker
 }
 
 //下注
-func (this *Player) bet(num int) {
-	if this.Chip < num {
+func (this *Player) Bet(num int) {
+	if this.chip < num {
 		return
 	}
-	this.Chip -= num
-	this.Bet += num
+	this.chip -= num
+	this.betChip += num
+}
+
+func (this *Player) GetBet() int {
+	return this.betChip
+}
+
+func (this *Player) GetChip() int {
+	return this.chip
+}
+
+func (this *Player) GetFold() bool {
+	return this.fold
 }
 
 //设置行动
-func (this *Player) cool(b bool) {
-	this.Cool = b
+func (this *Player) SetCool(b bool) {
+	this.cool = b
 }
 
-func (this *Player) getBet() int {
-	return this.Bet
+func (this *Player) Fold() {
+	this.fold = true
 }

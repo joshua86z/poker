@@ -59,7 +59,7 @@ func (this *Table) GetPlayers() []Player {
 //添加玩家
 func (this *Table) GetPlayerById(id int) Player {
 	for _, player := range this.Players {
-		if player.Id == id {
+		if player.id == id {
 			return player
 		}
 	}
@@ -76,17 +76,17 @@ func (this *Table) GetPlayerId() int {
 func (this *Table) NextPlayer(index int) int {
 
 	for i := index + 1; i < len(this.Players); i++ {
-		if this.Players[i].Id != 0 {
-			this.Players[i].cool(true)
-			this.Players[index].cool(false)
+		if this.Players[i].id != 0 {
+			this.Players[i].SetCool(true)
+			this.Players[index].SetCool(false)
 			return i
 		}
 	}
 
 	for i := 0; i < index; i++ {
-		if this.Players[i].Id != 0 {
-			this.Players[i].cool(true)
-			this.Players[index].cool(false)
+		if this.Players[i].id != 0 {
+			this.Players[i].SetCool(true)
+			this.Players[index].SetCool(false)
 			return i
 		}
 	}

@@ -11,7 +11,7 @@ import (
 	//	"math/rand"
 	"strconv"
 
-//	"time"
+	"time"
 )
 
 var WsList []*websocket.Conn
@@ -35,25 +35,41 @@ func Run(reply string, ws *websocket.Conn) {
 			if err != nil {
 				return
 			}
-			Id := getId(ws)
+			Id := GetId(ws)
 
 			for i := range table.Players {
-				if table.Players[i].Id == Id {
-					if !table.Players[i].Cool {
+				if table.Players[i].id == Id {
+					if !table.Players[i].cool {
+						//没到自己下注的时候
 						return
 					}
-					if table.Players[i].Chip < num {
+					if table.Players[i].chip < num {
+						//下的注超出了自己的上限
 						return
 					}
-					table.Players[i].bet(num)
-					nextId := table.NextPlayer(i)
-					table.addMaxChip(table.Players[i].getBet())
+					if table.Players[i].GetBet()+num < table.GetMaxChip() && table.Players[i].GetChip()-num > 0 {
+						//下的注不够
+						return
+					}
+					table.Players[i].Bet(num)
+					nextIndex := table.NextPlayer(i)
+					table.addMaxChip(table.Players[i].GetBet())
 					table.addSumChip(num)
 
-					if table.Players[nextId].getBet() >= table.MaxChip {
+					if table.Players[nextIndex].GetBet() >= table.MaxChip {
+						//没有任何人加注了
 						table.Next()
+
+						timer1 := time.NewTimer(time.Second * 2)
+						<-timer1.C
+
 						Play()
+						return
 					}
+					//这里还要判断是否其他人都不能加注了
+					//					table.Next()
+					//					Play()
+
 					//					fmt.Println(table)
 					//					table.Players[i].cool(false)
 					//					table.Players[table.NextPlayer(i)].cool(true)
@@ -70,7 +86,7 @@ func Run(reply string, ws *websocket.Conn) {
 	}
 }
 
-func getId(ws *websocket.Conn) int {
+func GetId(ws *websocket.Conn) int {
 	for i, val := range WsList {
 		if val == ws {
 			return i + 1
@@ -90,6 +106,8 @@ func Play() {
 		turnCards()
 	case 3:
 		riverCards()
+	case 5:
+		step5()
 	}
 }
 
@@ -110,18 +128,18 @@ func startingHand() {
 
 	for i, ws := range WsList {
 		var player Player
-		player.Id = i + 1
-		player.Chip = 10000
-		player.Cool = false
-		player.Poker = table.startingHand()
+		player.id = i + 1
+		player.chip = 10000
+		player.cool = false
+		player.poker = table.startingHand()
 
 		if i == 0 {
-			player.Cool = true
+			player.cool = true
 		}
 
 		table.addPlayer(player)
 
-		msg, _ := json.Marshal(SendData{Action: "startingHand", Data: player.Poker})
+		msg, _ := json.Marshal(SendData{Action: "startingHand", Data: player.poker})
 
 		if ws != nil {
 			err := websocket.Message.Send(ws, string(msg))
@@ -175,6 +193,10 @@ func riverCards() {
 	result, _ := json.Marshal(SendData{Action: "riverCards", Data: communityCards[4:len(communityCards)]})
 
 	send(string(result))
+}
+
+func step5() {
+
 }
 
 //群发数据
