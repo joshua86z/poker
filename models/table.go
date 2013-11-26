@@ -37,7 +37,10 @@ func (this *Table) Next() {
 		//		this.riverCards()
 		this.Step += 1
 	case 3:
-		//		this.riverCards()
+		//		亮牌
+		this.Step += 1
+	case 4:
+		//		下一局
 		this.Step = 0
 	}
 }
@@ -73,10 +76,26 @@ func (this *Table) GetPlayerId() int {
 }
 
 //下一个下注的玩家
-func (this *Table) NextPlayer(index int) int {
+func (this *Table) NextBetPlayer(index int) int {
+
+	var num int
+
+	for i := 0; i < len(this.Players); i++ {
+		if this.Players[i].id != 0 &&
+			this.Players[i].GetFold() == false &&
+			this.Players[i].GetChip() > 0 {
+			num++
+		}
+	}
+
+	if num <= 1 {
+		return -1
+	}
 
 	for i := index + 1; i < len(this.Players); i++ {
-		if this.Players[i].id != 0 {
+		if this.Players[i].id != 0 &&
+			this.Players[i].GetFold() == false &&
+			this.Players[i].GetChip() > 0 {
 			this.Players[i].SetCool(true)
 			this.Players[index].SetCool(false)
 			return i
@@ -84,7 +103,9 @@ func (this *Table) NextPlayer(index int) int {
 	}
 
 	for i := 0; i < index; i++ {
-		if this.Players[i].id != 0 {
+		if this.Players[i].id != 0 &&
+			this.Players[i].GetFold() == false &&
+			this.Players[i].GetChip() > 0 {
 			this.Players[i].SetCool(true)
 			this.Players[index].SetCool(false)
 			return i

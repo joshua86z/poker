@@ -39,6 +39,10 @@ func (this *Player) GetFold() bool {
 	return this.fold
 }
 
+func (this *Player) GetCool() bool {
+	return this.cool
+}
+
 //设置行动
 func (this *Player) SetCool(b bool) {
 	this.cool = b

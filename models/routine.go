@@ -39,11 +39,11 @@ func Run(reply string, ws *websocket.Conn) {
 
 			for i := range table.Players {
 				if table.Players[i].id == Id {
-					if !table.Players[i].cool {
+					if !table.Players[i].GetCool() {
 						//没到自己下注的时候
 						return
 					}
-					if table.Players[i].chip < num {
+					if table.Players[i].GetChip() < num {
 						//下的注超出了自己的上限
 						return
 					}
@@ -52,38 +52,73 @@ func Run(reply string, ws *websocket.Conn) {
 						return
 					}
 					table.Players[i].Bet(num)
-					nextIndex := table.NextPlayer(i)
+
 					table.addMaxChip(table.Players[i].GetBet())
 					table.addSumChip(num)
 
-					if table.Players[nextIndex].GetBet() >= table.MaxChip {
-						//没有任何人加注了
-						table.Next()
-
-						timer1 := time.NewTimer(time.Second * 2)
-						<-timer1.C
-
-						Play()
-						return
-					}
-					//这里还要判断是否其他人都不能加注了
-					//					table.Next()
-					//					Play()
-
-					//					fmt.Println(table)
-					//					table.Players[i].cool(false)
-					//					table.Players[table.NextPlayer(i)].cool(true)
+					nextBetPlayer(i)
 
 					fmt.Println("桌面上筹码是", table.MaxChip)
 					return
 				}
 			}
+		case "fold":
+			Id := GetId(ws)
+			for i := range table.Players {
+				if table.Players[i].id == Id {
+					if !table.Players[i].GetCool() {
+						//没到自己下注的时候
+						return
+					}
+					table.Players[i].Fold()
 
+					nextBetPlayer(i)
+
+					fmt.Println(Id, "放弃牌了")
+
+					return
+				}
+			}
 		}
 		return
 	} else {
 
 	}
+}
+
+//查找下一个可以下注的玩家
+func nextBetPlayer(index int) {
+
+	nextIndex := table.NextBetPlayer(index) //这里会设置是否可以行动
+	if nextIndex >= 0 && table.Players[nextIndex].GetBet() == table.GetMaxChip() {
+		fmt.Println("下一轮")
+		//所有人都跟注  下一轮
+		table.Next()
+		//停顿一秒后下一步骤
+		timer1 := time.NewTimer(time.Second * 1)
+		<-timer1.C
+		Play()
+		return
+	} else if nextIndex >= 0 {
+		fmt.Println("等人下注")
+		//有人可以下注
+		return
+	}
+
+	for {
+
+		table.Next()
+		//停顿一秒后下一步骤
+		timer1 := time.NewTimer(time.Second * 1)
+		<-timer1.C
+		Play()
+
+		step := table.GetStep()
+		if step == 5 {
+			break
+		}
+	}
+
 }
 
 func GetId(ws *websocket.Conn) int {
@@ -106,8 +141,8 @@ func Play() {
 		turnCards()
 	case 3:
 		riverCards()
-	case 5:
-		step5()
+	case 4:
+		step4()
 	}
 }
 
@@ -195,7 +230,7 @@ func riverCards() {
 	send(string(result))
 }
 
-func step5() {
+func step4() {
 
 }
 
